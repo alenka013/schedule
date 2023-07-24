@@ -47,6 +47,8 @@ dependencies:
   flutter_countdown_timer: ^4.1.0
   collection: ^1.17.1
   fluttertoast: ^8.2.2
+  loading_animation_widget: ^1.2.0+4
+  flutter_swipe_detector: ^2.0.0
 
 dev_dependencies:
   flutter_test:

@@ -2,6 +2,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:raspisanie/DateTimtUtils/date_time_utis.dart';
 
+import 'theme/conteiner_table_theme.dart';
+
 
 class NearestTrainingPage extends StatefulWidget {
   final String nearestDate; // Дата ближайшей тренировки
@@ -24,6 +26,7 @@ class _NearestTrainingPageState extends State<NearestTrainingPage> {
     super.initState();
     sortedEvents = List<Map<String, dynamic>>.from(widget.events);
     _sortEvents();
+    
     _scrollTimer = Timer.periodic(Duration(seconds: 5), (_) => _scrollContent());
   }
 
@@ -48,7 +51,7 @@ class _NearestTrainingPageState extends State<NearestTrainingPage> {
         _scrollingForward = false;
         if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent) {
           // Если достигли конца списка, возвращаемся на предыдущую страницу
-          Navigator.pop(context);
+    Navigator.pop(context, "Result Data");
           return;
         }
         _sortEvents(); // Пересортировываем перед обратной прокруткой
@@ -89,7 +92,7 @@ class _NearestTrainingPageState extends State<NearestTrainingPage> {
             child: Center(
               child: Text(
                 widget.nearestDate,
-                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                  style: ConteinerTableTheme.themeData.textTheme.headline6,
               ),
             ),
           ),
@@ -104,7 +107,7 @@ class _NearestTrainingPageState extends State<NearestTrainingPage> {
                 final startTime = timeAndSportParts[0];
                 final endTime = timeAndSportParts[1];
                 final sportsName = timeAndSportParts[2];
-                final titleString = titles.join(', '); // Объединяем титлы через запятую
+              //  final titleString = titles.join(', '); // Объединяем титлы через запятую
 
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -117,7 +120,8 @@ class _NearestTrainingPageState extends State<NearestTrainingPage> {
                             padding: const EdgeInsets.all(8.0),
                             child: Text(
                               '$startTime - $endTime',
-                              style: const TextStyle(fontSize: 24),
+                                style: ConteinerTableTheme.timeTextStyle,
+                           //   style: const TextStyle(fontSize: 24),
                             ),
                           ),
                         ),
@@ -126,19 +130,36 @@ class _NearestTrainingPageState extends State<NearestTrainingPage> {
                             padding: const EdgeInsets.all(8.0),
                             child: Text(
                               sportsName,
-                              style: const TextStyle(fontSize: 24),
+                           //   style: const TextStyle(fontSize: 24),
+                            style: ConteinerTableTheme.sportsNameTextStyle,
                             ),
                           ),
                         ),
                       ],
                     ),
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Text(
-                        titleString, 
-                        style: const TextStyle(fontSize: 24),
-                      ),
-                    ),
+                    // Padding(
+                    //   padding: const EdgeInsets.all(8.0),
+                    //   child: Text(
+                    //     titleString, 
+                    //      style: ConteinerTableTheme.titleTextStyle,
+                    //   //  style: const TextStyle(fontSize: 24),
+                    //   ),
+                    // ),
+                  Padding(
+      //  padding: const EdgeInsets.all(8.0), //если через запятую
+      //               child: buildBlueCell(titleString),
+      padding: const EdgeInsets.all(8.0),
+                  child: ListView.builder(
+                    physics: NeverScrollableScrollPhysics(),
+                    shrinkWrap: true,
+                    itemCount: titles.length,
+                    itemBuilder: (context, index) {
+                      final event = titles[index];
+                      return buildBlueCell(event ?? '');
+                    },
+                  ),
+    ),
+                    
                   ],
                 );
               },

@@ -13,10 +13,14 @@ class ApiService {
 
   static Future<List<Map<String, dynamic>>> fetchData() async {
     final Map<String, dynamic> requestBody = {
+//  "type": [ "objectSchedule" ],
+//     "id": "501a7928-fc5a-494c-b820-7d8d28f10f35",
+//     "start": "01.05.2023",
+//     "end": "20.08.2023"
       "type": ["objectSchedule"],
-      "id": "501a7928-fc5a-494c-b820-7d8d28f10f35",
-    "start": "01.05.2023",
-    "end": "20.08.2023"
+      "id": "794785bb-87d0-4199-8f54-02c4c1a412ed",
+      "start": "27.07.2023",
+      "end": "20.08.2023"
     };
 
      try {
