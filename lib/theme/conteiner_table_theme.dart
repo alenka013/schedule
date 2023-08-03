@@ -15,32 +15,33 @@ class ConteinerTableTheme {
     ),
   );
 
+  static TextStyle cap = TextStyle(
+    fontSize: 24,
+    fontWeight: FontWeight.w400,
+    fontStyle: FontStyle.italic,
+  );
+
+  static TextStyle bottom = TextStyle(
+    fontSize: 24,
+    fontWeight: FontWeight.w400,
+  );
+
   static TextStyle timeTextStyle = TextStyle(
-    fontSize: 24, fontWeight: FontWeight.w600,
+    fontSize: 24,
+    fontWeight: FontWeight.w600,
   );
 
   static TextStyle sportsNameTextStyle = TextStyle(
-    fontSize: 24, fontWeight: FontWeight.w600,
+    fontSize: 24,
+    fontWeight: FontWeight.w600,
   );
 
   // static TextStyle titleTextStyle = TextStyle(
   //   fontSize: 24,
   // );
-  
+
   static TextStyle datTextStyle = TextStyle(
-    fontSize: 18, fontWeight: FontWeight.w600,
-  );
-
-}
-
-
-Widget buildBlueCell(String text) {
-  return Container(
-    color: Colors.blue, // Задаем синий цвет фона
-    padding: EdgeInsets.all(8.0), // Добавляем отступы внутри ячейки
-    child: Text(
-      text,
-      style: TextStyle(color: Colors.white, fontSize: 24),  // Задаем белый цвет текста
-    ),
+    fontSize: 18,
+    fontWeight: FontWeight.w600,
   );
 }
