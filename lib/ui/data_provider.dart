@@ -2,18 +2,24 @@ import 'package:flutter/material.dart';
 import 'bd.dart';
 
 class DataProvider extends ChangeNotifier {
-  List<Map<String, dynamic>> data = [];
+  Map<String, List<Map<String, dynamic>>> dataMap = {};
 
-  Future<void> fetchData() async {
+  // Метод для получения данных для конкретного типа и идентификатора
+  Future<void> fetchDataForId(String type, String id) async {
     try {
       final List<Map<String, dynamic>> fetchedData =
-          await ApiService.fetchData();
+          await ApiService.fetchDataForId(type, id);
 
-      // Обновляем данные и уведомляем слушателей об изменении
-      data = fetchedData;
+      // Обновляем данные для указанного типа и идентификатора, и уведомляем слушателей об изменении
+      final key = '$type-$id';
+      dataMap[key] = fetchedData;
       notifyListeners();
+      
     } catch (e) {
-      print('Ошибка при получении данных: $e');
+      print('Ошибка при получении данных для типа $type и идентификатора $id: $e');
     }
   }
+  
 }
+
+

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:provider/provider.dart';
 import 'package:raspisanie/ui/data_provider.dart';
-import 'conteiner_tabl.dart'; 
+import 'id_selection_screen .dart'; 
 
 void main() {
   initializeDateFormatting('ru_RU');
@@ -23,7 +23,8 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
       ),
-      home: const ConteinerTable(),
+      home: //ConteinerTable(id:'1af75cba-f80b-4571-9879-59674083ae61'),
+       IdSelectionScreen(),
     );
   }}
 

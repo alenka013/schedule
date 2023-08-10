@@ -1,5 +1,4 @@
-import 'package:http/http.dart' as http;
-import 'dart:convert';
+
 
 // class ApiService {
 //   static const String apiUrl = 'https://lsport.net/api/read';
@@ -72,6 +71,8 @@ import 'dart:convert';
 //     return results;
 //   }
 // }
+import 'package:dio/dio.dart';
+
 
 class ApiService {
   static const String apiUrl = 'https://lsport.net/api/read';
@@ -86,15 +87,14 @@ class ApiService {
 
   static Future<List<String>> fetchScheduleGuidObjectList() async {
     try {
-      final response = await http.post(
-        Uri.parse(
-            'https://lsport.net/Facility/Displaysettings/1e4ccab0-bb68-48ea-a0b2-315488713f41'),
-        headers: headers,
-        body: jsonEncode({}),
+      final response = await Dio().post(
+        'https://lsport.net/Facility/Displaysettings/1e4ccab0-bb68-48ea-a0b2-315488713f41',
+        options: Options(headers: headers),
+        data: {},
       );
 
       if (response.statusCode == 200) {
-        final Map<String, dynamic> responseData = jsonDecode(response.body);
+        final Map<String, dynamic> responseData = response.data;
         if (responseData.containsKey('scheduleGuidObjectList')) {
           final List<dynamic> scheduleGuidList =
               responseData['scheduleGuidObjectList'];
@@ -129,14 +129,14 @@ class ApiService {
           "end": "20.08.2023",
         };
 
-        final response = await http.post(
-          Uri.parse(apiUrl),
-          headers: headers,
-          body: jsonEncode(requestBody),
+        final response = await Dio().post(
+          apiUrl,
+          options: Options(headers: headers),
+          data: requestBody,
         );
 
         if (response.statusCode == 200) {
-          final Map<String, dynamic> responseData = jsonDecode(response.body);
+          final Map<String, dynamic> responseData = response.data;
           if (responseData.containsKey('response') &&
               responseData['response'].containsKey('objectSchedule')) {
             results.addAll(
@@ -158,4 +158,80 @@ class ApiService {
 
     return results;
   }
+  static Future<List<Map<String, dynamic>>> fetchDataForId(String type, String id) async {
+    final Map<String, dynamic> requestBody = {
+      "type": [type],
+      "id": id,
+      "start": "01.05.2023",
+      "end": "20.08.2023",
+    };
+
+    try {
+      final response = await Dio().post(
+        apiUrl,
+        options: Options(headers: headers),
+        data: requestBody,
+      );
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> responseData = response.data;
+        if (responseData.containsKey('response') &&
+            responseData['response'].containsKey('objectSchedule')) {
+          return List<Map<String, dynamic>>.from(
+            responseData['response']['objectSchedule'],
+          );
+        } 
+        
+        
+        
+        else {
+          print('Data not found in the response for id $id.');
+        }
+      } else {
+        print('Request failed with status: ${response.statusCode} for id $id.');
+      }
+    } catch (e) {
+      print('Error: $e for id $id');
+    }
+
+    return [];
+  }
+  
+
+  static Future<String> fetchObjectName(String type, String id) async {
+      final Map<String, dynamic> requestBody = {
+      "type": [type],
+      "id": id,
+      "start": "01.05.2023",
+      "end": "20.08.2023",
+    };
+
+    try {
+      final response = await Dio().post(
+        apiUrl,
+        options: Options(headers: headers),
+        data: requestBody,
+      );
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> responseData = response.data;
+        if (responseData.containsKey('response') &&
+            responseData['response'].containsKey('object')) {
+          final Map<String, dynamic> objectData = responseData['response']['object'];
+          final String name = objectData['Name'];
+          return name;
+        } else {
+          print('Object data not found in the response.');
+          return '';
+        }
+      } else {
+        print('Request failed with status: ${response.statusCode}.');
+        return '';
+      }
+    } catch (e) {
+      print('Error: $e');
+      return '';
+    }
+  }
+
+
 }

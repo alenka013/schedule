@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
-import 'package:provider/provider.dart';
 import 'package:raspisanie/DateTimtUtils/date_time_utis.dart';
 import 'package:raspisanie/ui/bd.dart';
 import 'package:intl/intl.dart';
@@ -10,152 +9,135 @@ import 'package:raspisanie/ui/data_provider.dart';
 //import 'nearest_training_page.dart';
 import 'theme/conteiner_table_theme.dart';
 
+
+
 class ConteinerTable extends StatefulWidget {
-  const ConteinerTable({Key? key}) : super(key: key);
+  final String id;
+  final DataProvider dataProvider;
+
+  const ConteinerTable({
+    required Key key,
+    required this.id,
+    required this.dataProvider,
+  }) : super(key: key);
+
   @override
   State<ConteinerTable> createState() => _ConteinerTableState();
 }
 
 class _ConteinerTableState extends State<ConteinerTable> {
+  List<Map<String, dynamic>> combinedData = [];
+  String objectName ='';
   List<Map<String, dynamic>> data = [];
-  late Timer _scrollTimer;
   final ScrollController _scrollController = ScrollController();
-  Timer? _openTrainingPageTimer;
-  String _formattedDate = '';
-  String _formattedTime = '';
+    late DataProvider dataProvider;
   bool _dateTimeUpdated = false;
-
+bool hasEvents = false;
   @override
   void initState() {
     super.initState();
-    Provider.of<DataProvider>(context, listen: false).fetchData();
-    fetchData();
-    _startTrainingPageTimer();
-    _startDateTimeUpdate();
+     if (widget.id.isNotEmpty) {
+     widget.dataProvider.fetchDataForId("objectSchedule", widget.id);
+     }
+    fetchData(widget.id);
+     fetchObjectName();
+
 
     // Обновление данных
     Timer.periodic(Duration(minutes: 1), (_) {
-      fetchData();
+      fetchData(widget.id);
     });
+
+
 
     // Обновление времени до начала или окончания мероприятия
     Timer.periodic(Duration(seconds: 30), (_) {
       _updateTimeRemaining();
     });
+    dataProvider = widget.dataProvider;
   }
 
-  void _startDateTimeUpdate() {
-    // Устанавливаем начальные значения для даты и времени
-    setState(() {
-      _formattedDate = '';
-      _formattedTime = '';
-    });
-    Timer.periodic(const Duration(seconds: 1), (_) {
-      DateTime now = DateTime.now();
+
+  void fetchObjectName() async {
+    try {
+      final name = await ApiService.fetchObjectName("objectSchedule", widget.id);
       setState(() {
-        _formattedDate = _getFormattedDate(now);
-        _formattedTime = _getFormattedTime(now); // Move the code here
-        _dateTimeUpdated = true;
+        objectName = name;
       });
-    });
-  }
-
-  String _getFormattedDate(DateTime date) {
-    // Явно указываем русскую локаль
-    const String russianLocale = 'ru_RU';
-    // Создаем форматтер для даты с русской локалью
-    var formatterDate = DateFormat('dd MMMM y года', russianLocale);
-    return formatterDate.format(date);
-  }
-
-  String _getFormattedTime(DateTime dateTime) {
-    // Получаем локаль пользователя
-    final userLocale = Localizations.localeOf(context).toString();
-    // Создаем форматтер для времени с локалью пользователя
-    var formatterTime = DateFormat('HH:mm:ss', userLocale);
-
-    return formatterTime.format(dateTime);
-  }
-
-  void _updateTimeRemaining() {
-    final now = DateTime.now();
-    final List<Map<String, dynamic>> updatedData = [];
-
-    for (var event in data) {
-      final startTime = customDateFormat.parse(event['StartDate'] ?? '');
-      final endTime = customDateFormat.parse(event['EndDate'] ?? '');
-
-      if (now.isBefore(endTime)) {
-        // Мероприятие еще не закончилось, обновляем оставшееся время
-        event['TimeRemaining'] = getTimeRemaining(startTime, endTime);
-        updatedData.add(event);
-      }
+    } catch (e) {
+      print('Error fetching object name: $e');
     }
-
-    setState(() {
-      data = updatedData;
-    });
   }
+
+
+void _updateTimeRemaining() {
+  if (mounted) {
+  final now = DateTime.now();
+  final List<Map<String, dynamic>> updatedData = [];
+
+  for (var event in data) {
+  final startDateString = event['StartDate'];
+  final endDateString = event['EndDate'];
+
+  if (startDateString != null && endDateString != null) {
+    final startTime = customDateFormat.parse(startDateString);
+    final endTime = customDateFormat.parse(endDateString);
+
+    if (now.isBefore(endTime)) {
+      // Мероприятие еще не закончилось, обновляем оставшееся время
+      event['TimeRemaining'] = getTimeRemaining(startTime, endTime);
+      updatedData.add(event);
+    }
+  }
+}
+
+  setState(() {
+    data = updatedData;
+  });
+}}
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _startTrainingPageTimer();
-  }
-
-  void _startTrainingPageTimer() {
-    DateTime now = DateTime.now();
-    var formatterdate = DateFormat('dd MMMM y года ', 'ru');
-    var formattertime = DateFormat('HH:mm:ss', 'ru');
-    setState(() {
-      _formattedDate = formatterdate.format(now);
-      _formattedTime = formattertime.format(now);
-    });
-    // Обновляем время каждую секунду
-    Timer.periodic(const Duration(seconds: 1), (_) {
-      setState(() {
-        _formattedDate = formatterdate.format(DateTime.now());
-        _formattedTime = formattertime.format(DateTime.now());
-      });
-    });
+  if (widget.id.isNotEmpty) {
+      fetchData(widget.id);
+    }
   }
 
   @override
   void dispose() {
-    _scrollTimer.cancel();
     _scrollController.dispose();
     super.dispose();
-    _openTrainingPageTimer?.cancel();
   }
 
-  Future<void> fetchData() async {
-    final fetchedData = await ApiService.fetchData();
-    final now = DateTime.now(); // Получение текущей даты и времени.
+  Future<void> fetchData(String id) async {
+  try {
+final List<Map<String, dynamic>> fetchedData =
+        await ApiService.fetchDataForId("objectSchedule", id);
+
+
+
+    final now = DateTime.now();
     final endOfNext24Hours = now.add(Duration(hours: 24));
 
     final currentEvents = fetchedData.where((item) {
-      // Получение даты начала и окончания события.
       final startDate = customDateFormat.parse(item['StartDate'] ?? '');
       final endDate = customDateFormat.parse(item['EndDate'] ?? '');
       return startDate.isBefore(endOfNext24Hours) && endDate.isAfter(now);
     }).toList();
 
     final futureEvents = fetchedData.where((item) {
-      // Получение даты начала события без времени.
       final startDate = customDateFormat.parse(item['StartDate'] ?? '');
-
       return startDate.isAfter(now) && startDate.isBefore(endOfNext24Hours);
     }).toList();
 
     currentEvents.sort((a, b) {
-      // Сортировка данных текущих событий по дате начала события.
       final aStartDate = customDateFormat.parse(a['StartDate'] ?? '');
       final bStartDate = customDateFormat.parse(b['StartDate'] ?? '');
       return aStartDate.compareTo(bStartDate);
     });
 
     futureEvents.sort((a, b) {
-      // Сортировка данных будущих событий по дате начала события.
       final aStartDate = customDateFormat.parse(a['StartDate'] ?? '');
       final bStartDate = customDateFormat.parse(b['StartDate'] ?? '');
       return aStartDate.compareTo(bStartDate);
@@ -163,12 +145,22 @@ class _ConteinerTableState extends State<ConteinerTable> {
 
     final List<Map<String, dynamic>> combinedData = [];
     combinedData.addAll(currentEvents);
-    combinedData.addAll(futureEvents);
+combinedData.addAll(futureEvents);
 
-    setState(() {
-      data = combinedData;
-    });
+if (combinedData.isEmpty) {
+  combinedData.add({'NoData': true});
+} else {
+  hasEvents = true;
+}
+
+setState(() {
+  data = combinedData;
+});
+  } catch (e) {
+    print('Ошибка при получении данных: $e');
   }
+}
+
 
   Map<String, List<Map<String, dynamic>>> _groupEventsByTime(
       List<Map<String, dynamic>> events) {
@@ -294,7 +286,6 @@ class _ConteinerTableState extends State<ConteinerTable> {
             decoration: const BoxDecoration(
               border: Border(
                 top: BorderSide(color: Colors.grey, width: 1.0),
-                //  left: BorderSide(color: Colors.grey, width: 1.0),
                 right: BorderSide(color: Colors.grey, width: 1.0),
                 bottom: BorderSide(color: Colors.grey, width: 1.0),
               ),
@@ -326,9 +317,16 @@ class _ConteinerTableState extends State<ConteinerTable> {
     String timeRemaining,
     bool isCurrentEvent,
     int rowIndex,
+    String id,
   ) {
     final bool isNearestEvent = !isCurrentEvent && rowIndex % 2 == 0;
-
+ if (data[rowIndex].containsKey('NoData')) {
+    return Container(
+      // Выводим сообщение о отсутствии данных
+      child: Text('Занятий нет'),
+    );
+  }
+else{
     final Color cellColor = isCurrentEvent
         ? orangeColor
         : (isNearestEvent ? blueColor : purpleColor);
@@ -432,7 +430,7 @@ class _ConteinerTableState extends State<ConteinerTable> {
         ],
       ),
     );
-  }
+  }}
 
   @override
   Widget build(BuildContext context) {
@@ -454,58 +452,14 @@ class _ConteinerTableState extends State<ConteinerTable> {
     }
     if (!_dateTimeUpdated) {
       // Если дата и время еще не обновлены, обновляем их сейчас
-      DateTime now = DateTime.now();
-      _formattedDate = _getFormattedDate(now);
-      _formattedTime = _getFormattedTime(now);
+      //DateTime now = DateTime.now();
       _dateTimeUpdated = true;
     }
     final groupedData = groupDataByDate();
     return Scaffold(
-      appBar: AppBar(
-        toolbarHeight: 90,
-        backgroundColor: Colors.white10,
-        elevation: 0, // Убираем тень
-        flexibleSpace: Column(
-          mainAxisAlignment: MainAxisAlignment.end,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            StreamBuilder<DateTime>(
-              builder: (context, snapshot) {
-                return Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Padding(
-                      padding: EdgeInsets.only(left: 40.0),
-                      child: Text(
-                        _formattedDate, // Используем отформатированную дату здесь
-                        textAlign: TextAlign.left,
-                        style: TextStyle(
-                          fontSize: 40,
-                          color: Colors.black87,
-                        ),
-                      ),
-                    ),
-                    Padding(
-                      padding: EdgeInsets.only(right: 40.0),
-                      child: Text(
-                        _formattedTime, // Используем отформатированное время здесь
-                        textAlign: TextAlign.right,
-                        style: TextStyle(
-                          fontSize: 40,
-                          color: Colors.black87,
-                        ),
-                      ),
-                    ),
-                  ],
-                );
-              },
-            ),
-          ],
-        ),
-      ),
       body: Center(
         child: Container(
-          width: MediaQuery.of(context).size.width * 0.9, // 90% экрана
+          width: MediaQuery.of(context).size.width, // 90% экрана
           padding: EdgeInsets.all(10.0),
           child: ListView(
             children: [
@@ -549,11 +503,8 @@ class _ConteinerTableState extends State<ConteinerTable> {
                           final timeString =
                               groupedEvents.keys.elementAt(index - 1);
                           final eventsWithSameTime = groupedEvents[timeString]!;
-                          final trainers =
-                              eventsWithSameTime[0]['Trainers'] ?? [];
-                          final sportsName = // trainers.isNotEmpty
-                              // ? (trainers[0]['Sports']?[0]['Name'] ?? '')
-                              //:
+                         
+                          final sportsName = 
                               '';
                           final eventsText = eventsWithSameTime
                               .map((event) => event['Title'] ?? '')
@@ -572,6 +523,7 @@ class _ConteinerTableState extends State<ConteinerTable> {
                             timeRemaining,
                             false, // Установите isCurrentEvent в false для будущих мероприятий
                             index,
+                             widget.id,
                           );
                         },
                       ),
@@ -589,7 +541,51 @@ class _ConteinerTableState extends State<ConteinerTable> {
   Widget _buildCurrentEventsTable() {
     // Получаем все мероприятия из данных
     List<Map<String, dynamic>> allEvents = data;
+  // Если данных нет, выводим сообщение
+   if (allEvents.any((event) => event.containsKey('NoData'))) {
+     return Center(
+       child:Column(
+  mainAxisAlignment: MainAxisAlignment.center,
+  crossAxisAlignment: CrossAxisAlignment.center,
+  children: [
+     Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+                 Padding(
+          padding: EdgeInsets.all(10.0),
+          child: Align(
+            alignment: Alignment.topCenter,
+            child: Padding(
+              padding: EdgeInsets.symmetric(vertical: 20.0),
+              child: Center(
+                child: Text(
+                  objectName,
+                // widget.id, // Здесь выводится значение id
+                  style: TextStyle(fontSize: 40),
+                ),
+              ),
+            ),
+          ),
+        ),
 
+      
+                Padding(
+                  padding: const EdgeInsets.all(10.0),
+                  child: Align(
+                    alignment: Alignment.center,
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 10.0, vertical: 40),
+                      child: Text(
+                        'Нет доступных мероприятий',
+                        style: ConteinerTableTheme.bottom,
+                      ),
+                    ),
+                  ),
+                ),
+                
+              ],
+            ),]));
+   }
     // Получаем текущее время
     final now = DateTime.now();
 
@@ -621,17 +617,16 @@ class _ConteinerTableState extends State<ConteinerTable> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Padding(
+         Padding(
           padding: EdgeInsets.all(10.0),
           child: Align(
-            alignment: Alignment.centerLeft,
+            alignment: Alignment.topCenter,
             child: Padding(
               padding: EdgeInsets.symmetric(vertical: 20.0),
               child: Center(
                 child: Text(
-                  'Ледовая арена',
-
-                  ///сюда название экрана будет выводиться
+                  objectName,
+                // widget.id, // Здесь выводится значение id
                   style: TextStyle(fontSize: 40),
                 ),
               ),
@@ -678,7 +673,7 @@ class _ConteinerTableState extends State<ConteinerTable> {
                         customDateFormat.parse(events[0]['EndDate'] ?? '');
                     final formattedTime =
                         '${DateFormat('HH:mm').format(startTime)} - ${DateFormat('HH:mm').format(endTime)}';
-                    final trainers = events[0]['Trainers'] ?? [];
+                   // final trainers = events[0]['Trainers'] ?? [];
                     final sportsName = // trainers.isNotEmpty
                         //    ? (trainers[0]['Sports']?[0]['Name'] ?? '')
                         // :
@@ -697,6 +692,7 @@ class _ConteinerTableState extends State<ConteinerTable> {
                           timeRemaining,
                           true, // Установите isCurrentEvent в true для текущих мероприятий
                           index,
+                           widget.id
                         ),
                       ],
                     );
@@ -755,4 +751,5 @@ class _ConteinerTableState extends State<ConteinerTable> {
       ],
     );
   }
+  
 }
