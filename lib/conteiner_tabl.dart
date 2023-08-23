@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 import 'package:raspisanie/ui/data_provider.dart';
 //import 'nearest_training_page.dart';
 import 'theme/conteiner_table_theme.dart';
+import 'package:auto_size_text/auto_size_text.dart';
 
 
 
@@ -272,9 +273,10 @@ setState(() {
                 bottom: BorderSide(color: Colors.grey, width: 1.0),
               ),
             ),
-            child: Text(
+            child: AutoSizeText(
               'Ближайшие мероприятия',
               style: ConteinerTableTheme.cap,
+               maxLines: 1, 
             ),
           ),
         ),
@@ -291,9 +293,10 @@ setState(() {
               ),
             ),
             child: Center(
-              child: Text(
+              child: AutoSizeText(
                 'До начала',
                 style: ConteinerTableTheme.cap,
+                 maxLines: 1, 
               ),
             ),
           ),
@@ -363,7 +366,7 @@ else{
                     padding: const EdgeInsets.only(left: 20.0),
                     child: Container(
                       padding: const EdgeInsets.symmetric(vertical: 10.0),
-                      child: Text(
+                      child: AutoSizeText(
                         timeString,
                         style: ConteinerTableTheme.timeTextStyle,
                       ),
@@ -381,7 +384,7 @@ else{
                     padding: const EdgeInsets.only(left: 40.0),
                     child: Container(
                       padding: const EdgeInsets.symmetric(vertical: 10.0),
-                      child: Text(
+                      child: AutoSizeText(
                         sportsName,
                         style: ConteinerTableTheme.bottom,
                       ),
@@ -407,7 +410,7 @@ else{
                     ),
                     child: Container(
                       padding: const EdgeInsets.symmetric(vertical: 10.0),
-                      child: Text(
+                      child: AutoSizeText(
                         eventsText,
                         style: ConteinerTableTheme.bottom,
                       ),
@@ -417,7 +420,7 @@ else{
                 Expanded(
                   child: Container(
                     child: Center(
-                      child: Text(
+                      child: AutoSizeText(
                         timeRemaining,
                         style: ConteinerTableTheme.bottom,
                       ),
@@ -483,50 +486,51 @@ else{
                           alignment: Alignment.centerRight,
                           child: Padding(
                             padding: EdgeInsets.symmetric(horizontal: 10.0),
-                            child: Text(
+                            child: AutoSizeText(
                               dateString,
                               style: ConteinerTableTheme.bottom,
                             ),
                           ),
                         ),
                       ),
-                      ListView.builder(
-                        physics: NeverScrollableScrollPhysics(),
-                        shrinkWrap: true,
-                        itemCount: groupedEvents.length + 1,
-                        itemBuilder: (context, index) {
-                          if (index == 0) {
-                            return _buildTableHeader();
-                          }
+                     ListView.builder(
+  physics: NeverScrollableScrollPhysics(),
+  shrinkWrap: true,
+  itemCount: groupedEvents.length + 1,
+  itemBuilder: (context, index) {
+    if (index == 0) {
+      return _buildTableHeader();
+    }
 
-                          ///ближайшие мероприятяи
-                          final timeString =
-                              groupedEvents.keys.elementAt(index - 1);
-                          final eventsWithSameTime = groupedEvents[timeString]!;
-                         
-                          final sportsName = 
-                              '';
-                          final eventsText = eventsWithSameTime
-                              .map((event) => event['Title'] ?? '')
-                              .join(', ');
-                          final timeRemaining = getTimeRemaining(
-                            customDateFormat.parse(
-                                eventsWithSameTime[0]['StartDate'] ?? ''),
-                            customDateFormat
-                                .parse(eventsWithSameTime[0]['EndDate'] ?? ''),
-                          );
+    final timeString = groupedEvents.keys.elementAt(index - 1);
+    final eventsWithSameTime = groupedEvents[timeString]!;
 
-                          return _buildTableRow(
-                            timeString,
-                            sportsName,
-                            eventsText,
-                            timeRemaining,
-                            false, // Установите isCurrentEvent в false для будущих мероприятий
-                            index,
-                             widget.id,
-                          );
-                        },
-                      ),
+    final sportsName = '';
+    final timeRemaining = getTimeRemaining(
+      customDateFormat.parse(eventsWithSameTime[0]['StartDate'] ?? ''),
+      customDateFormat.parse(eventsWithSameTime[0]['EndDate'] ?? ''),
+    );
+
+    Set<String> eventsTextSet = {}; // Используем Set для хранения уникальных названий событий
+
+    for (var event in eventsWithSameTime) {
+      eventsTextSet.add(event['Title'] ?? '');
+    }
+
+    String eventsText = eventsTextSet.join(', '); // Преобразуем Set в строку
+
+    return _buildTableRow(
+      timeString,
+      sportsName,
+      eventsText,
+      timeRemaining,
+      false,
+      index,
+      widget.id,
+    );
+  },
+),
+
                     ],
                   );
                 },
@@ -558,7 +562,7 @@ else{
             child: Padding(
               padding: EdgeInsets.symmetric(vertical: 20.0),
               child: Center(
-                child: Text(
+                child: AutoSizeText(
                   objectName,
                 // widget.id, // Здесь выводится значение id
                   style: TextStyle(fontSize: 40),
@@ -575,7 +579,7 @@ else{
                     alignment: Alignment.center,
                     child: Padding(
                       padding: EdgeInsets.symmetric(horizontal: 10.0, vertical: 40),
-                      child: Text(
+                      child: AutoSizeText(
                         'Нет доступных мероприятий',
                         style: ConteinerTableTheme.bottom,
                       ),
@@ -624,7 +628,7 @@ else{
             child: Padding(
               padding: EdgeInsets.symmetric(vertical: 20.0),
               child: Center(
-                child: Text(
+                child: AutoSizeText(
                   objectName,
                 // widget.id, // Здесь выводится значение id
                   style: TextStyle(fontSize: 40),
@@ -652,7 +656,7 @@ else{
                     alignment: Alignment.centerRight,
                     child: Padding(
                       padding: EdgeInsets.symmetric(horizontal: 10.0),
-                      child: Text(
+                      child: AutoSizeText(
                         dateString,
                         style: ConteinerTableTheme.bottom,
                       ),
@@ -722,9 +726,10 @@ else{
                 bottom: BorderSide(color: Colors.grey, width: 1.0),
               ),
             ),
-            child: Text(
+            child: AutoSizeText(
               'Текущие мероприятия', // Измененный текст для текущих мероприятий
               style: ConteinerTableTheme.cap,
+               maxLines: 1, 
             ),
           ),
         ),
@@ -741,9 +746,10 @@ else{
               ),
             ),
             child: Center(
-              child: Text(
+              child: AutoSizeText(
                 'До конца',
                 style: ConteinerTableTheme.cap,
+                 maxLines: 1, 
               ),
             ),
           ),

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:raspisanie/ui/data_provider.dart';
 
+import 'advertisement/my_advertisement.dart';
 import 'conteiner_tabl.dart';
 
 class ContainerTableScreenList extends StatefulWidget {
@@ -26,11 +27,15 @@ class _ContainerTableScreenListState extends State<ContainerTableScreenList> {
     super.initState();
     _scrollController = ScrollController();
     _startAutoScroll();
+
   }
 
+  
   void _startAutoScroll() {
     _timer = Timer.periodic(const Duration(seconds: 30), (_) {
+
       _currentIndex++;
+  
       if (_currentIndex >= widget.idList.length) {
         _currentIndex = 0;
       }
